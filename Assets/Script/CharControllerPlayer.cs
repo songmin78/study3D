@@ -6,6 +6,7 @@ public class CharControllerPlayer : MonoBehaviour
 {
     private CharacterController characterController;
     private Vector3 moveDir;
+    private Camera camMain;
 
     private float verticalVelocity = 0f;
     private float gravity = 9.81f;
@@ -22,13 +23,38 @@ public class CharControllerPlayer : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
     }
+    private void Start()
+    {
+        camMain = GetComponent<Camera>();
+    }
 
     void Update()
     {
+        checkMouseLock();
+        rotation();
+
         checkGround();
         moving();
         jump();
         checkGravity();
+        checkSlpoe();
+    }
+
+    private void checkMouseLock()
+    {
+        if(Input.GetKeyDown(KeyCode.LeftControl))
+        {
+            switch(Cursor.lockState)
+            {
+                case CursorLockMode.Locked:Cursor.lockState = CursorLockMode.None;break;
+                case CursorLockMode.None:Cursor.lockState = CursorLockMode.Locked;break;
+            }
+        }
+    }
+
+    private void rotation()
+    {
+        //transform.rotation = Quaternion.Euler(0f, camMain.transform.eulerAngles.y, 0f);
     }
 
     private void checkGround()
@@ -46,7 +72,16 @@ public class CharControllerPlayer : MonoBehaviour
     {
         moveDir = new Vector3(inputHorizontal(), 0f, inputVertical());
 
-        characterController.Move(transform.rotation * moveDir * Time.deltaTime);
+        if (isSlople == true)
+        {
+            {
+                characterController.Move(-slopeVelocity * Time.deltaTime);
+            }
+        }
+        else
+        {
+            characterController.Move(transform.rotation * moveDir * Time.deltaTime);
+        }
     }
     
     private float inputHorizontal()
@@ -61,7 +96,7 @@ public class CharControllerPlayer : MonoBehaviour
 
     private void jump()
     {
-        if(isGround == false)
+        if(isGround == false || isSlople == true)
         {
             return;
         }
@@ -83,9 +118,32 @@ public class CharControllerPlayer : MonoBehaviour
 
         if(isJump == true)
         {
+            isJump = false;
             verticalVelocity = jumpForce;
         }
+        else
+        {
+            verticalVelocity -= gravity * Time.deltaTime;
+        }
 
-        characterController.Move(new Vector3(0f, verticalVelocity, 0) * Time.deltaTime);
+        characterController.Move(new Vector3(0f, verticalVelocity, 0f) * Time.deltaTime);
     }
+
+    private void checkSlpoe()
+    {
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, characterController.height , LayerMask.GetMask("Ground", "Roof")))
+        {
+            float angle = Vector3.Angle(hit.normal, Vector3.up);
+            if(angle >= characterController.slopeLimit)
+            {
+                isSlople = true;
+                slopeVelocity = Vector3.ProjectOnPlane(new Vector3(0f, gravity, 0f), hit.normal);
+            }
+            else
+            {
+                isSlople = false;
+            }
+        }
+    }
+
 }
