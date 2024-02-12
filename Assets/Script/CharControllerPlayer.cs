@@ -25,7 +25,7 @@ public class CharControllerPlayer : MonoBehaviour
     }
     private void Start()
     {
-        camMain = GetComponent<Camera>();
+        camMain = Camera.main;
     }
 
     void Update()
@@ -54,7 +54,8 @@ public class CharControllerPlayer : MonoBehaviour
 
     private void rotation()
     {
-        //transform.rotation = Quaternion.Euler(0f, camMain.transform.eulerAngles.y, 0f);
+        transform.rotation = Quaternion.Euler(0f, camMain.transform.eulerAngles.y, 0f);
+
     }
 
     private void checkGround()
@@ -131,7 +132,7 @@ public class CharControllerPlayer : MonoBehaviour
 
     private void checkSlpoe()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, characterController.height , LayerMask.GetMask("Ground", "Roof")))
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, characterController.height, LayerMask.GetMask("Ground")))
         {
             float angle = Vector3.Angle(hit.normal, Vector3.up);
             if(angle >= characterController.slopeLimit)
